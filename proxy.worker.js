@@ -15,7 +15,7 @@ https://cdn.corsfix.workers.dev/?url=https://api.example.com/endpoint
 // eslint-disable-next-line import/no-anonymous-default-export
 const ORIGINS = [
     // "*",
-    "http://localhost:3000", // Local development
+    "*", // Local development
 ];
 
 // ─── Pre-compiled at module load (runs once on cold start) ───

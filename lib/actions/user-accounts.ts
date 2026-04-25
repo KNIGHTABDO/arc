@@ -28,6 +28,22 @@ export async function getUserAccounts() {
     // `async-defer-await` - Single query, await immediately
     const accounts = await db.select().from(userAccounts).where(eq(userAccounts.userId, session.user.id));
 
+    // Inject global Real-Debrid account
+    if (process.env.REAL_DEBRID_API_KEY) {
+        // Check if user already has a real-debrid account to avoid duplicates
+        const hasRD = accounts.some(acc => acc.type === "real-debrid");
+        if (!hasRD) {
+            accounts.push({
+                id: "global-rd-account",
+                userId: session.user.id,
+                apiKey: process.env.REAL_DEBRID_API_KEY,
+                type: "real-debrid",
+                name: "Global Real-Debrid",
+                createdAt: new Date(),
+            });
+        }
+    }
+
     return accounts;
 }
 

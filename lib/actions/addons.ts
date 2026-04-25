@@ -26,7 +26,32 @@ export async function getUserAddons() {
 
     const userAddons = await db.select().from(addons).where(eq(addons.userId, session.user.id)).orderBy(addons.order);
 
-    return userAddons;
+    // Global Addons
+    const globalAddons = [
+        {
+            id: "global-addon-torrentio",
+            userId: session.user.id,
+            name: "Torrentio",
+            url: "https://torrentio.strem.fun/manifest.json",
+            enabled: true,
+            order: -2,
+        },
+        {
+            id: "global-addon-annatar",
+            userId: session.user.id,
+            name: "Annatar",
+            url: "https://annatar.elfhosted.com/manifest.json",
+            enabled: true,
+            order: -1,
+        }
+    ];
+
+    // Filter out global addons if user already added them manually
+    const filteredGlobalAddons = globalAddons.filter(
+        globalAddon => !userAddons.some(userAddon => userAddon.url === globalAddon.url)
+    );
+
+    return [...filteredGlobalAddons, ...userAddons];
 }
 
 /**

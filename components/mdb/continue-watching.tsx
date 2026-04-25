@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ScrollCarousel } from "@/components/common/scroll-carousel";
 import { useStreamingStore, type StreamingRequest } from "@/lib/stores/streaming";
 import { useUserAddons } from "@/hooks/use-addons";
+import { useAuthGuaranteed } from "../auth/auth-provider";
 import {
     usePlaybackHistory,
     useRemoveFromPlaybackHistory,
@@ -17,8 +18,9 @@ import {
 } from "@/hooks/use-playback-history";
 import { traktClient } from "@/lib/trakt";
 import type { PlaybackHistory } from "@/lib/db/schema";
-import type { Addon } from "@/lib/addons/types";
+import type { Addon, AddonSource } from "@/lib/addons/types";
 import type { TvSearchParams } from "@/lib/addons/types";
+import type { DebridClient } from "@/lib/clients";
 
 function formatEpisodeLabel(season: number, episode: number): string {
     return `S${String(season).padStart(2, "0")}E${String(episode).padStart(2, "0")}`;
@@ -196,7 +198,8 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
 
 interface ContinueWatchingEntryProps {
     entry: PlaybackHistory;
-    play: (request: StreamingRequest, addons: Addon[]) => void;
+    play: (request: StreamingRequest, addons: Addon[], client: DebridClient) => void;
+    client: DebridClient;
     addons: Addon[];
     activeRequest: StreamingRequest | null;
     isAddonsLoading: boolean;
@@ -206,6 +209,7 @@ interface ContinueWatchingEntryProps {
 const ContinueWatchingEntry = memo(function ContinueWatchingEntry({
     entry,
     play,
+    client,
     addons,
     activeRequest,
     isAddonsLoading,
@@ -234,12 +238,12 @@ const ContinueWatchingEntry = memo(function ContinueWatchingEntry({
         [entry.imdbId, entry.type, entry.title, entry.year, entry.posterUrl, tvParams]
     );
 
-    const handlePlay = useCallback(() => play(playRequest, addons), [play, playRequest, addons]);
+    const handlePlay = useCallback(() => play(playRequest, addons, client), [play, playRequest, addons, client]);
 
     const handlePlayNext = useCallback(() => {
         if (!nextEpisode) return;
-        play({ ...playRequest, tvParams: nextEpisode }, addons);
-    }, [play, playRequest, nextEpisode, addons]);
+        play({ ...playRequest, tvParams: nextEpisode }, addons, client);
+    }, [play, playRequest, nextEpisode, addons, client]);
 
     const handleRemove = useCallback(() => onRemove(entry.imdbId), [onRemove, entry.imdbId]);
 
@@ -258,6 +262,7 @@ export const ContinueWatching = memo(function ContinueWatching() {
     const { data: entries = [], isPending: isHistoryLoading } = usePlaybackHistory();
     const activeRequest = useStreamingStore((s) => s.activeRequest);
     const play = useStreamingStore((s) => s.play);
+    const { client } = useAuthGuaranteed();
     const { data: addons = [], isPending: isAddonsLoading } = useUserAddons();
     const { mutate: removeEntry } = useRemoveFromPlaybackHistory();
     const { mutate: clearAll } = useClearPlaybackHistory();
@@ -287,6 +292,7 @@ export const ContinueWatching = memo(function ContinueWatching() {
                             key={entry.id}
                             entry={entry}
                             play={play}
+                            client={client}
                             addons={addons}
                             activeRequest={activeRequest}
                             isAddonsLoading={isAddonsLoading}

@@ -113,6 +113,7 @@ export const SourceRow = memo(function SourceRow({
     source: AddonSource;
     request: StreamingRequest;
 }) {
+    const { client } = useAuthGuaranteed();
     // Build metadata string with editorial separators
     const metaParts: string[] = [];
     if (source.resolution) metaParts.push(source.resolution);
@@ -155,7 +156,9 @@ export const SourceRow = memo(function SourceRow({
                     <div className="flex items-center gap-2 justify-end sm:shrink-0">
                         {source.magnet && <AddSourceButton magnet={source.magnet} />}
                         {source.url && (
-                            <Button size="sm" onClick={() => useStreamingStore.getState().playSource(source, request)}>
+                            <Button
+                                size="sm"
+                                onClick={() => useStreamingStore.getState().playSource(source, request, client)}>
                                 <PlayIcon className="size-4 fill-current" />
                                 Play
                             </Button>

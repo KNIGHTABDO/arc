@@ -4,6 +4,7 @@ import { memo, useCallback, type ReactElement } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { useStreamingStore, type StreamingRequest } from "@/lib/stores/streaming";
 import { useUserAddons } from "@/hooks/use-addons";
+import { useAuthGuaranteed } from "../auth/auth-provider";
 
 interface WatchButtonProps {
     request: StreamingRequest;
@@ -13,6 +14,7 @@ interface WatchButtonProps {
 export const WatchButton = memo(function WatchButton({ request, children }: WatchButtonProps) {
     const play = useStreamingStore((s) => s.play);
     const activeRequest = useStreamingStore((s) => s.activeRequest);
+    const { client } = useAuthGuaranteed();
     const { data: addons = [], isPending: isAddonsLoading } = useUserAddons();
 
     const isLoading =
@@ -27,9 +29,9 @@ export const WatchButton = memo(function WatchButton({ request, children }: Watc
             e.preventDefault();
             e.stopPropagation();
             if (isLoading) return;
-            play(request, addons);
+            play(request, addons, client);
         },
-        [play, request, addons, isLoading]
+        [play, request, addons, isLoading, client]
     );
 
     return (

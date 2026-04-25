@@ -12,7 +12,7 @@ import { useSettingsStore } from "./settings";
 import { usePreviewStore } from "./preview";
 import { type Media } from "@/lib/trakt";
 import { recordPlayback } from "@/lib/actions/playback-history";
-import { useAuthStore } from "./auth";
+import type { DebridClient } from "@/lib/clients";
 
 export interface StreamingRequest {
     imdbId: string;
@@ -25,8 +25,8 @@ interface StreamingState {
     activeRequest: StreamingRequest | null;
     selectedSource: AddonSource | null;
 
-    play: (request: StreamingRequest, addons: Addon[]) => Promise<void>;
-    playSource: (source: AddonSource, request: StreamingRequest) => void;
+    play: (request: StreamingRequest, addons: Addon[], client: DebridClient) => Promise<void>;
+    playSource: (source: AddonSource, request: StreamingRequest, client: DebridClient) => void;
     cancel: () => void;
 }
 
@@ -114,12 +114,11 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
     activeRequest: null,
     selectedSource: null,
 
-    playSource: async (source, request) => {
+    playSource: async (source, request, client) => {
         const title = formatTitle(request);
         const metaLabel = [source.resolution, source.quality, source.size].filter(Boolean).join(" ");
         const fileName = metaLabel ? `${title} [${metaLabel}]` : title;
 
-        const { client } = useAuthStore.getState();
         const mediaPlayer = useSettingsStore.getState().get("mediaPlayer");
 
         // Helper to launch player
@@ -150,7 +149,7 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
                 for (let i = 0; i < 5; i++) {
                     files = await client.getTorrentFiles(torrentId);
                     if (files.length > 0) break;
-                    await new Promise(r => setTimeout(r, 1000));
+                    await new Promise((r) => setTimeout(r, 1000));
                 }
 
                 // Find the correct file - if we used fileIdx it should be the only one or we find by name
@@ -184,7 +183,7 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
             });
     },
 
-    play: async (request, addons) => {
+    play: async (request, addons, client) => {
         const { imdbId, type, tvParams, media } = request;
         const title = formatTitle(request);
 
@@ -263,7 +262,7 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
                 isCached: result.isCached,
                 autoPlay: streamingSettings.autoPlay,
                 allowUncached: streamingSettings.allowUncached,
-                onPlay: () => playSource(source, { imdbId, type, tvParams, media }),
+                onPlay: () => playSource(source, { imdbId, type, tvParams, media }, client),
             });
         } catch (error) {
             // Only show error if this is still the current request
@@ -284,3 +283,4 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
         dismissToast();
     },
 }));
+

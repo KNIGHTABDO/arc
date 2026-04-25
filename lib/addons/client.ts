@@ -53,8 +53,16 @@ export class AddonClient {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
+        // Apply CORS proxy if configured
+        let targetUrl = url;
+        const proxyUrl = process.env.NEXT_PUBLIC_CORS_PROXY_URL;
+        if (proxyUrl) {
+            // Ensure proxyUrl ends correctly before appending target
+            targetUrl = proxyUrl.includes("?url=") ? `${proxyUrl}${url}` : `${proxyUrl}${url}`;
+        }
+
         try {
-            const response = await fetch(url, {
+            const response = await fetch(targetUrl, {
                 headers: this.getHeaders(),
                 signal: controller.signal,
             });

@@ -57,8 +57,9 @@ export class AddonClient {
         let targetUrl = url;
         const proxyUrl = process.env.NEXT_PUBLIC_CORS_PROXY_URL;
         if (proxyUrl) {
-            // Ensure proxyUrl ends correctly before appending target
-            targetUrl = proxyUrl.includes("?url=") ? `${proxyUrl}${url}` : `${proxyUrl}${url}`;
+            // CRITICAL: Must encode the URL so the proxy receives it correctly
+            const encodedUrl = encodeURIComponent(url);
+            targetUrl = proxyUrl.includes("?url=") ? `${proxyUrl}${encodedUrl}` : `${proxyUrl}${encodedUrl}`;
         }
 
         try {

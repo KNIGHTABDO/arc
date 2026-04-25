@@ -147,7 +147,7 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
                 // Poll for the file link (it should be instant if cached)
                 let files: any[] = [];
                 for (let i = 0; i < 5; i++) {
-                    files = await client.getTorrentFiles(torrentId);
+                    files = await client.getTorrentFiles(String(torrentId));
                     if (files.length > 0) break;
                     await new Promise((r) => setTimeout(r, 1000));
                 }

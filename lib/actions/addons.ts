@@ -40,7 +40,7 @@ export async function getUserAddons() {
             id: "global-addon-annatar",
             userId: session.user.id,
             name: "Annatar",
-            url: "https://annatar.elfhosted.com/manifest.json",
+            url: "https://annatar.info/manifest.json",
             enabled: true,
             order: -2,
         },

@@ -37,10 +37,10 @@ export async function getUserAddons() {
             order: -3,
         },
         {
-            id: "global-addon-annatar",
+            id: "global-addon-comet",
             userId: session.user.id,
-            name: "Annatar",
-            url: "https://annatar.info/manifest.json",
+            name: "Comet",
+            url: "https://comet.elfhosted.com/manifest.json",
             enabled: true,
             order: -2,
         },

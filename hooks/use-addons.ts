@@ -226,8 +226,14 @@ export async function getStreamCapableAddons(
         }) => Promise<T>;
     }
 ): Promise<Addon[]> {
-    const manifests = await Promise.all(addons.map((a) => qc.ensureQueryData(manifestQueryOptions(a))));
-    return addons.filter((_, i) => hasStreams(manifests[i] as AddonManifest));
+    const manifestPromises = addons.map((a) =>
+        qc.ensureQueryData(manifestQueryOptions(a)).catch((err) => {
+            console.error(`Failed to fetch manifest for addon ${a.name}:`, err);
+            return null;
+        })
+    );
+    const manifests = await Promise.all(manifestPromises);
+    return addons.filter((_, i) => manifests[i] && hasStreams(manifests[i] as AddonManifest));
 }
 
 interface UseAddonSourcesOptions {

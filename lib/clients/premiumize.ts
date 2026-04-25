@@ -488,7 +488,7 @@ export default class PremiumizeClient extends BaseClient {
         );
     }
 
-    async addMagnetLinks(magnetUris: string[]): Promise<Record<string, DebridFileAddStatus>> {
+    async addMagnetLinks(magnetUris: string[], _metadata?: { fileIdx?: number }): Promise<Record<string, DebridFileAddStatus>> {
         // Parallelize magnet link additions
         const promises = magnetUris.map(async (magnet) => {
             try {

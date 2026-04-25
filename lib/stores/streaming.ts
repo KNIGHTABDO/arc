@@ -12,6 +12,7 @@ import { useSettingsStore } from "./settings";
 import { usePreviewStore } from "./preview";
 import { type Media } from "@/lib/trakt";
 import { recordPlayback } from "@/lib/actions/playback-history";
+import { useAuthStore } from "./auth";
 
 export interface StreamingRequest {
     imdbId: string;
@@ -113,23 +114,59 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
     activeRequest: null,
     selectedSource: null,
 
-    playSource: (source, request) => {
-        if (!source.url) return;
-
-        const mediaPlayer = useSettingsStore.getState().get("mediaPlayer");
-
+    playSource: async (source, request) => {
         const title = formatTitle(request);
-
-        // Build descriptive filename with source metadata
         const metaLabel = [source.resolution, source.quality, source.size].filter(Boolean).join(" ");
         const fileName = metaLabel ? `${title} [${metaLabel}]` : title;
 
-        if (mediaPlayer === MediaPlayer.BROWSER) {
-            usePreviewStore
-                .getState()
-                .openSinglePreview({ url: source.url, title: fileName, fileType: FileType.VIDEO });
-        } else {
-            openInPlayer({ url: source.url, fileName, player: mediaPlayer });
+        const { client } = useAuthStore.getState();
+        const mediaPlayer = useSettingsStore.getState().get("mediaPlayer");
+
+        // Helper to launch player
+        const launch = (url: string) => {
+            if (mediaPlayer === MediaPlayer.BROWSER) {
+                usePreviewStore.getState().openSinglePreview({ url, title: fileName, fileType: FileType.VIDEO });
+            } else {
+                openInPlayer({ url, fileName, player: mediaPlayer });
+            }
+        };
+
+        // Case 1: Source already has a direct playable URL
+        if (source.url && !source.magnet) {
+            launch(source.url);
+        }
+        // Case 2: Source is a magnet that needs unrestricting (The "Netflix-Style" Bypass)
+        else if (source.magnet && client) {
+            toast.loading("Unrestricting source...", { id: toastId ?? undefined });
+            try {
+                // Add the magnet with the specific fileIdx
+                const result = await client.addMagnetLinks([source.magnet], { fileIdx: source.fileIdx });
+                const torrentId = result[source.magnet]?.id;
+
+                if (!torrentId) throw new Error("Failed to add magnet to debrid");
+
+                // Poll for the file link (it should be instant if cached)
+                let files: any[] = [];
+                for (let i = 0; i < 5; i++) {
+                    files = await client.getTorrentFiles(torrentId);
+                    if (files.length > 0) break;
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+
+                // Find the correct file - if we used fileIdx it should be the only one or we find by name
+                const targetFile = files[0]; // If we selected one file, it will be index 0 in the result list
+                if (!targetFile || !targetFile.id) throw new Error("Could not resolve debrid file link");
+
+                // Get the final unrestricted link
+                const linkInfo = await client.getDownloadLink({ fileNode: targetFile as any });
+                dismissToast();
+                launch(linkInfo.link);
+            } catch (error) {
+                toast.error("Failed to unrestrict link", {
+                    id: toastId ?? undefined,
+                    description: error instanceof Error ? error.message : "Unknown error",
+                });
+            }
         }
 
         // Record playback history
@@ -140,7 +177,6 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
             tvParams: request.tvParams,
         })
             .then(() => {
-                // Invalidate query to refetch and update continue watching
                 queryClient.invalidateQueries({ queryKey: ["playback-history"] });
             })
             .catch((error) => {
@@ -201,6 +237,54 @@ export const useStreamingStore = create<StreamingState>()((set, get) => ({
             const allSources = results.flat();
 
             const streamingSettings = useSettingsStore.getState().get("streaming");
+            const result = selectBestSource(allSources, streamingSettings);
+
+            if (!result.hasMatches) {
+                set({ activeRequest: null });
+                toast.error("No sources found", {
+                    id: toastId ?? undefined,
+                    position: TOAST_POSITION,
+                    description:
+                        allSources.length > 0
+                            ? "No sources match your quality preferences"
+                            : "No sources available from enabled addons",
+                });
+                return;
+            }
+
+            const { playSource } = get();
+            const source = result.source!;
+
+            set({ activeRequest: null, selectedSource: source });
+
+            showSourceToast({
+                source,
+                title,
+                isCached: result.isCached,
+                autoPlay: streamingSettings.autoPlay,
+                allowUncached: streamingSettings.allowUncached,
+                onPlay: () => playSource(source, { imdbId, type, tvParams, media }),
+            });
+        } catch (error) {
+            // Only show error if this is still the current request
+            if (currentRequestId === requestId) {
+                toast.error("Failed to fetch sources", {
+                    id: toastId ?? undefined,
+                    position: TOAST_POSITION,
+                    description: error instanceof Error ? error.message : "Unknown error",
+                });
+                set({ activeRequest: null });
+            }
+        }
+    },
+
+    cancel: () => {
+        requestId++; // Increment to ignore pending request results
+        set({ selectedSource: null, activeRequest: null });
+        dismissToast();
+    },
+}));
+eaming");
             const result = selectBestSource(allSources, streamingSettings);
 
             if (!result.hasMatches) {

@@ -322,7 +322,7 @@ export default class AllDebridClient extends BaseClient {
         );
     }
 
-    async addMagnetLinks(magnetUris: string[]): Promise<Record<string, DebridFileAddStatus>> {
+    async addMagnetLinks(magnetUris: string[], _metadata?: { fileIdx?: number }): Promise<Record<string, DebridFileAddStatus>> {
         const formData = new FormData();
         magnetUris.forEach((magnet) => formData.append("magnets[]", magnet));
 

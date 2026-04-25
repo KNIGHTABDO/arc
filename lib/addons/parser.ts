@@ -184,6 +184,7 @@ export function parseStream(stream: AddonStream, addonId: string, addonName: str
         quality,
         magnet,
         url: stream.url,
+        fileIdx: stream.fileIdx,
         isCached,
         addonId,
         addonName,

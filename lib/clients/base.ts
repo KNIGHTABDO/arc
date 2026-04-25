@@ -74,7 +74,7 @@ export default abstract class BaseClient {
         return new File([blob], uri, { type: contentType });
     }
 
-    async addTorrent(uris: string[]): Promise<Record<string, DebridFileAddStatus>> {
+    async addTorrent(uris: string[], metadata?: { fileIdx?: number }): Promise<Record<string, DebridFileAddStatus>> {
         const httpUris: string[] = [];
         const magnetUris: string[] = [];
 
@@ -89,7 +89,7 @@ export default abstract class BaseClient {
 
         const [httpResults, magnetResults] = await Promise.allSettled([
             httpUris.length > 0 ? this.addHttpDownloads(httpUris) : Promise.resolve({}),
-            magnetUris.length > 0 ? this.addMagnetLinks(magnetUris) : Promise.resolve({}),
+            magnetUris.length > 0 ? this.addMagnetLinks(magnetUris, metadata) : Promise.resolve({}),
         ]);
 
         const httpData = httpResults.status === "fulfilled" ? httpResults.value : {};
@@ -125,7 +125,7 @@ export default abstract class BaseClient {
         return results;
     }
 
-    abstract addMagnetLinks(magnetUris: string[]): Promise<Record<string, DebridFileAddStatus>>;
+    abstract addMagnetLinks(magnetUris: string[], metadata?: { fileIdx?: number }): Promise<Record<string, DebridFileAddStatus>>;
     abstract uploadTorrentFiles(files: File[]): Promise<Record<string, DebridFileAddStatus>>;
     abstract findTorrents(searchQuery: string): Promise<DebridFile[]>;
     abstract findTorrentById?(torrentId: string): Promise<DebridFile | null>;

@@ -34,13 +34,21 @@ export async function getUserAddons() {
             name: "Torrentio",
             url: "https://torrentio.strem.fun/manifest.json",
             enabled: true,
-            order: -2,
+            order: -3,
         },
         {
             id: "global-addon-annatar",
             userId: session.user.id,
             name: "Annatar",
             url: "https://annatar.elfhosted.com/manifest.json",
+            enabled: true,
+            order: -2,
+        },
+        {
+            id: "global-addon-opensubtitles",
+            userId: session.user.id,
+            name: "OpenSubtitles v3",
+            url: "https://opensubtitles-v3.strem.io/manifest.json",
             enabled: true,
             order: -1,
         }

@@ -107,6 +107,7 @@ export interface AddonSource {
     peers?: string;
     magnet?: string;
     url?: string;
+    fileIdx?: number;
     isCached?: boolean;
     addonId: string;
     addonName: string;

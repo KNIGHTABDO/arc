@@ -319,7 +319,7 @@ export default class RealDebridClient extends BaseClient {
         );
     }
 
-    async addMagnetLinks(magnetUris: string[]): Promise<Record<string, DebridFileAddStatus>> {
+    async addMagnetLinks(magnetUris: string[], metadata?: { fileIdx?: number }): Promise<Record<string, DebridFileAddStatus>> {
         const results: Record<string, DebridFileAddStatus> = {};
 
         for (const magnet of magnetUris) {
@@ -332,7 +332,11 @@ export default class RealDebridClient extends BaseClient {
                     headers: RealDebridClient.FORM_HEADERS,
                 });
 
-                await this.selectAllFiles(result.id);
+                if (metadata?.fileIdx !== undefined) {
+                    await this.selectSpecificFile(result.id, metadata.fileIdx);
+                } else {
+                    await this.selectAllFiles(result.id);
+                }
 
                 results[magnet] = {
                     success: true,
@@ -350,6 +354,19 @@ export default class RealDebridClient extends BaseClient {
         }
 
         return results;
+    }
+
+    private async selectSpecificFile(torrentId: string, fileIdx: number): Promise<void> {
+        // Real-Debrid file indices are 1-based in their file list but addons provide them differently usually
+        // Most addons (like Torrentio) provide the exact ID or index needed.
+        // We'll first fetch the torrent info to map the index if needed, but for RD it's usually the ID.
+        const body = new URLSearchParams({ files: String(fileIdx) });
+
+        await this.makeRequest<void>(`/torrents/selectFiles/${torrentId}`, {
+            method: "POST",
+            body: body.toString(),
+            headers: RealDebridClient.FORM_HEADERS,
+        });
     }
 
     async uploadTorrentFiles(files: File[]): Promise<Record<string, DebridFileAddStatus>> {

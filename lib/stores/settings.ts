@@ -186,20 +186,20 @@ const settingsConfig: SettingsConfig = {
     },
     streaming: {
         defaultValue: {
-            profileId: "high-quality",
+            profileId: "max-quality",
             customRange: {
-                minResolution: Resolution.FHD_1080P,
+                minResolution: "any",
                 maxResolution: "any",
-                minSourceQuality: SourceQuality.WEBRIP,
-                maxSourceQuality: SourceQuality.BLURAY,
+                minSourceQuality: "any",
+                maxSourceQuality: "any",
             },
             allowUncached: false,
             autoPlay: true,
         },
     },
-    tmdbApiKey: {
-        defaultValue: "",
-    },
+    mediaPlayer: {
+        defaultValue: MediaPlayer.VLC,
+        presets: [
 };
 
 export type SettingsData = {

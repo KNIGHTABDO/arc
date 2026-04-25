@@ -200,6 +200,80 @@ const settingsConfig: SettingsConfig = {
     mediaPlayer: {
         defaultValue: MediaPlayer.VLC,
         presets: [
+            {
+                value: MediaPlayer.BROWSER,
+                label: "Browser Preview",
+                description: "All platforms - Built-in browser preview with controls",
+            },
+            {
+                value: MediaPlayer.VLC,
+                label: "VLC",
+                description: "All platforms - Cross-platform media player",
+            },
+            {
+                value: MediaPlayer.KODI,
+                label: "Kodi",
+                description: "All platforms - Media center application",
+            },
+            {
+                value: MediaPlayer.MPV,
+                label: "MPV",
+                description: "macOS, Windows, Linux - Lightweight media player",
+            },
+            {
+                value: MediaPlayer.IINA,
+                label: "IINA",
+                description: "macOS - Powerful media player for macOS",
+            },
+            {
+                value: MediaPlayer.INFUSE,
+                label: "Infuse",
+                description: "iOS, macOS - Premium video player for Apple devices",
+            },
+            {
+                value: MediaPlayer.POTPLAYER,
+                label: "PotPlayer",
+                description: "Windows - Advanced media player for Windows",
+            },
+            {
+                value: MediaPlayer.MX_PLAYER,
+                label: "MX Player",
+                description: "Android - Popular Android media player",
+            },
+            {
+                value: MediaPlayer.MX_PLAYER_PRO,
+                label: "MX Player Pro",
+                description: "Android - Pro version of MX Player",
+            },
+        ],
+    },
+    downloadLinkMaxAge: {
+        defaultValue: 900000, // 15 minutes in milliseconds
+        presets: [
+            { value: 300000, label: "5 minutes" },
+            { value: 900000, label: "15 minutes" },
+            { value: 3600000, label: "1 hour" },
+            { value: 10800000, label: "3 hours" },
+            { value: 21600000, label: "6 hours" },
+            { value: 43200000, label: "12 hours" },
+        ],
+    },
+    streaming: {
+        defaultValue: {
+            profileId: "max-quality",
+            customRange: {
+                minResolution: "any",
+                maxResolution: "any",
+                minSourceQuality: "any",
+                maxSourceQuality: "any",
+            },
+            allowUncached: false,
+            autoPlay: true,
+        },
+    },
+    tmdbApiKey: {
+        defaultValue: "",
+    },
 };
 
 export type SettingsData = {
